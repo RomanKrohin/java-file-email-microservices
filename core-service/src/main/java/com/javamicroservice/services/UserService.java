@@ -22,9 +22,6 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private JavaMailSender mailSender;
-
-    @Autowired
     private JwtUtil jwtUtil;
 
     public String registerUser(User user) {
