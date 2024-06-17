@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -48,9 +49,9 @@ public class FileService {
         return CompletableFuture.completedFuture(null);
     }
 
-    public List<FileResponse> listFiles(String userEmail, String sortBy) {
+    public List<FileResponse> listFiles(String userEmail, String sortBy, Optional<String> filterByDate, Optional<Long> filterById, Optional<Long> filterBySize) {
         List<FileMetadata> files = fileRepository.findAllByUserEmail(userEmail, Sort.by(sortBy));
-        return files.stream()
+        return filterFiles(files, filterByDate, filterById, filterBySize).stream()
                 .map(file -> new FileResponse(
                         file.getId(),
                         file.getFileName(),
@@ -69,9 +70,9 @@ public class FileService {
         return fileMetadata;
     }
 
-    public List<FileResponse> listAllFiles(String sortBy) {
+    public List<FileResponse> listAllFiles(String sortBy, Optional<String> filterByDate, Optional<Long> filterById, Optional<Long> filterBySize) {
         List<FileMetadata> files = fileRepository.findAll(Sort.by(sortBy));
-        return files.stream()
+        return filterFiles(files, filterByDate, filterById, filterBySize).stream()
                 .map(file -> new FileResponse(
                         file.getId(),
                         file.getFileName(),
@@ -87,6 +88,25 @@ public class FileService {
     private boolean isImage(MultipartFile file) {
         String contentType = file.getContentType();
         return contentType.equals("image/jpeg") || contentType.equals("image/png");
+    }
+
+    private List<FileMetadata> filterFiles(List<FileMetadata> files, Optional<String> filterByDate, Optional<Long> filterById, Optional<Long> filterBySize) {
+        if (filterByDate.isPresent()) {
+            files = files.stream()
+                    .filter(file -> file.getUploadTime().toLocalDate().toString().equals(filterByDate.get()))
+                    .collect(Collectors.toList());
+        }
+        if (filterById.isPresent()) {
+            files = files.stream()
+                    .filter(file -> file.getId().equals(filterById.get()))
+                    .collect(Collectors.toList());
+        }
+        if (filterBySize.isPresent()) {
+            files = files.stream()
+                    .filter(file -> file.getSize()==(filterBySize.get()))
+                    .collect(Collectors.toList());
+        }
+        return files;
     }
 
 }
