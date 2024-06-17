@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/files")
@@ -50,15 +51,20 @@ public class FileController {
     }
 
     @GetMapping
-    public ResponseEntity<List<FileResponse>> listFiles(@RequestParam Optional<String> sortBy, Principal principal) {
+    public ResponseEntity<List<FileResponse>> listFiles(@RequestParam Optional<String> sortBy,
+                                                        @RequestParam Optional<String> filterByDate,
+                                                        @RequestParam Optional<Long> filterById,
+                                                        @RequestParam Optional<Long> filterBySize,
+                                                        Principal principal) {
         if (userService.isUserBlocked(principal.getName())) {
             return ResponseEntity.status(403).body(null);
         }
-        return ResponseEntity.ok(fileService.listFiles(principal.getName(), sortBy.orElse("uploadTime")));
+        return ResponseEntity.ok(fileService.listFiles(principal.getName(), sortBy.orElse("uploadTime"), filterByDate, filterById, filterBySize));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable Long id, Principal principal) throws Exception {
+    public ResponseEntity<Resource> downloadFile(@PathVariable Long id,
+                                                 Principal principal) throws Exception {
         if (userService.isUserBlocked(principal.getName())) {
             return ResponseEntity.status(403).body(null);
         }
@@ -76,8 +82,12 @@ public class FileController {
 
 
     @GetMapping("/mod/files")
-    public ResponseEntity<List<FileResponse>> listAllFiles(@RequestParam Optional<String> sortBy) {
-        return ResponseEntity.ok(fileService.listAllFiles(sortBy.orElse("uploadTime")));
+    public ResponseEntity<List<FileResponse>> listAllFiles(@RequestParam Optional<String> sortBy,
+                                                           @RequestParam Optional<String> filterByDate,
+                                                           @RequestParam Optional<Long> filterById,
+                                                           @RequestParam Optional<Long> filterBySize,
+                                                           Principal principal) {
+        return ResponseEntity.ok(fileService.listAllFiles(sortBy.orElse("uploadTime"), filterByDate, filterById, filterBySize));
     }
 
 }
